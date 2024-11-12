@@ -1,0 +1,4 @@
+# Ignore pickle files because they are too large
+*.pkl
+*.mp4
+*.out
