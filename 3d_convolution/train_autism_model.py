@@ -117,10 +117,10 @@ if __name__ == "__main__":
 
     "end vae_loss"
 
-    with open("rg_and_anisotropy_production_dataframe.pkl", "rb") as f:
+    with open("inputs_window_size_50_frames.pkl", "rb") as f:
         data = pickle.load(f)
 
-    inputs = np.array(data["pdist_evecs"].tolist(), dtype=np.float32)
+    inputs = np.array(data["pdist"].tolist(), dtype=np.float32)
     inputs = inputs.transpose(
         0, 4, 1, 2, 3
     )  # Reshape from (N,D,H,W,C) to (N,C,D,H,W) for PyTorch Conv3d

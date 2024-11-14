@@ -3,7 +3,6 @@ import torch
 import torch.nn as nn
 from matplotlib.animation import FuncAnimation
 from matplotlib.animation import FFMpegWriter
-from AuTiSM_model import AuTiSM_Model
 from torch.utils.data import Dataset, DataLoader
 import pickle
 import matplotlib.pyplot as plt
@@ -13,7 +12,13 @@ from torch.utils.data import Subset
 import pandas as pd
 
 latent_dim_A = 64
-latent_dim_B = 3
+latent_dim_B = 16
+bidirectional = True
+
+if bidirectional:
+    from AuTiSM_model_bidirectional import AuTiSM_Model
+else:
+    from AuTiSM_model import AuTiSM_Model
 
 plot_positions = False
 perform_umap = latent_dim_B > 3
@@ -60,7 +65,10 @@ M = dataset[0].size(0)  # Number of frames
 
 model = AuTiSM_Model(N=N, M=M, latent_dim_A=latent_dim_A, latent_dim_B=latent_dim_B).to(device)
 # Load model weights
-weights_path = os.path.join(script_dir, f"AuTiSM_latentA={latent_dim_A}_latentB={latent_dim_B}.pth")
+filename = f"AuTiSM_latentA={latent_dim_A}_latentB={latent_dim_B}.pth"
+if bidirectional:
+    filename = f"AuTiSM_latentA={latent_dim_A}_latentB={latent_dim_B}_bidirectional={bidirectional}.pth"
+weights_path = os.path.join(script_dir, filename)
 model.load_state_dict(torch.load(weights_path, map_location=device))
 
 # Evaluate model on a random sample
@@ -163,34 +171,38 @@ if perform_umap:
     plt.close()
     print("Done plotting.")
 else:
-    print("Creating 3D interactive plot...")
+    print("Creating 3D interactive plots...")
     import plotly.express as px
-    
+
     # Convert tensor to numpy and create dataframe
     latent_df = pd.DataFrame(
         all_latent_B.cpu().numpy(),
         columns=['x', 'y', 'z']
     )
-    
-    # Create 3D scatter plot
-    fig = px.scatter_3d(
-        latent_df,
-        x='x',
-        y='y', 
-        z='z',
-        title='Latent Space Visualization'
-    )
-    
-    # Update layout for better visualization
-    fig.update_traces(marker=dict(size=3))
-    fig.update_layout(
-        scene = dict(
-            xaxis_title='Latent Dim 1',
-            yaxis_title='Latent Dim 2',
-            zaxis_title='Latent Dim 3'
+
+    # Create 3D scatter plots for each variable
+    variables = ['f', 'beta', 'kappa', 'shear_rate']
+    for var in variables:
+        latent_df[var] = df[var].iloc[indices].values
+        fig = px.scatter_3d(
+            latent_df,
+            x='x',
+            y='y',
+            z='z',
+            color=var,
+            title=f'Latent Space Visualization - Colored by {var}'
         )
-    )
-    
-    # Save as interactive HTML
-    fig.write_html('latent_space_3d.html')
-    print("Interactive plot saved as latent_space_3d.html")
+
+        # Update layout for better visualization
+        fig.update_traces(marker=dict(size=3))
+        fig.update_layout(
+            scene=dict(
+                xaxis_title='Latent Dim 1',
+                yaxis_title='Latent Dim 2',
+                zaxis_title='Latent Dim 3'
+            )
+        )
+
+        # Save as interactive HTML
+        fig.write_html(f'latent_space_3d_{var}.html')
+        print(f"Interactive plot saved as latent_space_3d_{var}.html")

@@ -19,10 +19,10 @@ sys.path.append(script_dir)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-with open("rg_and_anisotropy_production_dataframe.pkl", "rb") as f:
+with open("inputs_window_size_50_frames.pkl", "rb") as f:
     data = pickle.load(f)
 
-inputs = np.array(data["pdist_evecs"].tolist(), dtype=np.float32)
+inputs = np.array(data["pdist"].tolist(), dtype=np.float32)
 inputs = inputs.transpose(
     0, 4, 1, 2, 3
 )  # Reshape from (N,D,H,W,C) to (N,C,D,H,W) for PyTorch Conv3d
@@ -43,9 +43,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = VideoVAE(
     input_channels=3,
     latent_dim=latent_dim,
-    input_depth=5,
-    input_height=100,
-    input_width=100,
+    input_depth=input_depth,
+    input_height=input_height,
+    input_width=input_width,
 ).to(device)
 
 model.load_state_dict(

@@ -22,9 +22,9 @@ def process_file(
     file, last_frames_frac, reversible_bonding=True, n_backbone=100
 ):
     if reversible_bonding:
-        data_dir = "../../data/production_reversible_bonds"
+        data_dir = "../../../data/production_reversible_bonds"
     else:
-        data_dir = "../../data/production_irreversible_bonds"
+        data_dir = "../../../data/production_irreversible_bonds"
     filepath = os.path.join(data_dir, file)
 
     with gsd.hoomd.open(filepath) as traj:
@@ -158,9 +158,9 @@ def process_file(
 
 def main(reversible_bonding=True):
     if reversible_bonding:
-        data_dir = "../../data/production_reversible_bonds"
+        data_dir = "../../../data/production_reversible_bonds"
     else:
-        data_dir = "../../data/production_irreversible_bonds"
+        data_dir = "../../../data/production_irreversible_bonds"
     files = sorted(os.listdir(data_dir))
     n_cores = os.cpu_count()
     print(f"Processing {len(files)} files using {n_cores} cores")

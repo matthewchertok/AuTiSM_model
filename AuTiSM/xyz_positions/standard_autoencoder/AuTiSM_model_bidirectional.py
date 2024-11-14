@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+# not used, because it shows poor latent space organization compared to the unidirectional model.
 
 class BondVectorEncoder(nn.Module):
     """A neural network module for encoding bond vector sequences into a latent representation.

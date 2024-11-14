@@ -5,14 +5,17 @@ import torch.nn as nn
 class BondVectorEncoder(nn.Module):
     """A neural network module for encoding bond vector sequences into a latent representation.
 
-    This encoder uses a GRU (Gated Recurrent Unit) to process sequences of positions and produce
+    This encoder uses a linear layer to map input bond vectors to a higher-dimensional latent space,
+    followed by a GRU (Gated Recurrent Unit) to process the sequence and produce
     a fixed-size latent representation.
 
     Args:
         input_size (int, optional): The number of expected features in the input x. Defaults to 3.
         latent_dim_A (int, optional): The dimensionality of the latent space A. Defaults to 64.
+        hidden_size (int, optional): The dimensionality of the GRU input size. Defaults to 128.
 
     Attributes:
+        fc_in (nn.Linear): Linear layer mapping input_size to hidden_size.
         gru (nn.GRU): The GRU layer used for sequence processing.
 
     Returns:
@@ -20,13 +23,15 @@ class BondVectorEncoder(nn.Module):
                       containing the encoded position sequence information.
     """
 
-    def __init__(self, input_size=3, latent_dim_A=64):
+    def __init__(self, input_size=3, latent_dim_A=64, hidden_size=128):
         super(BondVectorEncoder, self).__init__()
+        self.fc_in = nn.Linear(input_size, hidden_size)
         self.gru = nn.GRU(
-            input_size=input_size, hidden_size=latent_dim_A, batch_first=True
+            input_size=hidden_size, hidden_size=latent_dim_A, batch_first=True
         )
 
     def forward(self, x):
+        x = self.fc_in(x)
         _, h_n = self.gru(x)
         latent_A = h_n.squeeze(0)
         return latent_A
@@ -74,17 +79,20 @@ class TemporalEncoder(nn.Module):
     """Temporal encoder that processes sequences of latent vectors into a single latent representation.
 
     This module takes a sequence of latent vectors (latent space A) that were generated from
-    position encodings over multiple frames, and encodes them into a single latent vector
-    (latent space B) using a GRU network. The temporal relationships between the sequential
-    latent vectors are preserved in the final encoding.
+    position encodings over multiple frames, maps them to a higher-dimensional space using a
+    linear layer, and encodes them into a single latent vector (latent space B) using a GRU network.
+    The temporal relationships between the sequential latent vectors are preserved in the final encoding.
 
     Args:
         input_size (int, optional): Dimensionality of input latent vectors (latent space A).
             Defaults to 64.
+        hidden_size (int, optional): Dimensionality of the hidden representation after the linear layer.
+            Defaults to 128.
         latent_dim_B (int, optional): Dimensionality of output latent vector (latent space B).
             Defaults to 8.
 
     Parameters:
+        fc_in (nn.Linear): Linear layer mapping input_size to hidden_size.
         gru (nn.GRU): Gated Recurrent Unit layer that processes the sequence.
 
     Input:
@@ -96,14 +104,16 @@ class TemporalEncoder(nn.Module):
             Shape: (batch_size, latent_dim_B)
     """
 
-    def __init__(self, input_size=64, latent_dim_B=8):
+    def __init__(self, input_size=64, hidden_size=128, latent_dim_B=8):
         super(TemporalEncoder, self).__init__()
+        self.fc_in = nn.Linear(input_size, hidden_size)
         self.gru = nn.GRU(
-            input_size=input_size, hidden_size=latent_dim_B, batch_first=True
+            input_size=hidden_size, hidden_size=latent_dim_B, batch_first=True
         )
 
     def forward(self, latent_A_seq):
-        _, h_n = self.gru(latent_A_seq)
+        x = self.fc_in(latent_A_seq)
+        _, h_n = self.gru(x)
         latent_B = h_n.squeeze(0)
         return latent_B
 

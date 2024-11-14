@@ -6,8 +6,8 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 
 latent_dim_A = 64  # must be even if bidirectional is True
-latent_dim_B = 16  # must be even if bidirectional is True
-bidirectional = True
+latent_dim_B = 3  # must be even if bidirectional is True
+bidirectional = False
 
 if bidirectional:
     from AuTiSM_model_bidirectional import AuTiSM_Model
@@ -63,7 +63,7 @@ criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters())
 
 # Training loop
-num_epochs = 1000
+num_epochs = 100
 losses = []
 
 print("Training model...")
@@ -99,6 +99,8 @@ plt.savefig(f"training_loss_latentA={latent_dim_A}_latentB={latent_dim_B}.png")
 plt.close()
 
 # Save model weights
-filename = f"AuTiSM_latentA={latent_dim_A}_latentB={latent_dim_B}_bidirectional={bidirectional}.pth"
+filename = f"AuTiSM_latentA={latent_dim_A}_latentB={latent_dim_B}.pth"
+if bidirectional:
+    filename = f"AuTiSM_latentA={latent_dim_A}_latentB={latent_dim_B}_bidirectional={bidirectional}.pth"
 torch.save(model.state_dict(), filename)
 print("Model training complete. Model weights saved as", filename)
